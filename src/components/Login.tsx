@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Lock, Mail, ArrowRight, AlertCircle, Shield } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle, Shield, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 
@@ -38,6 +38,7 @@ const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -78,8 +79,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
 
     // Security: Hardcoded credentials (no database = no SQL injection possible)
-    const VALID_EMAIL = 'admin@salon.com';
-    const VALID_PASSWORD = 'admin123';
+    const VALID_EMAIL = 'salondruminaa.dev@salon.com';
+    const VALID_PASSWORD = 'Druminaa.devsalon@07';
 
     // Security: Constant-time comparison
     const emailMatch = constantTimeCompare(sanitizedEmail.toLowerCase(), VALID_EMAIL.toLowerCase());
@@ -201,7 +202,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <input 
                 type="email" 
                 className="form-control" 
-                placeholder="admin@salon.com" 
+                placeholder="Enter your login ID" 
                 style={{ paddingLeft: '2.75rem' }}
                 value={email}
                 onChange={handleEmailChange}
@@ -218,10 +219,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div style={{ position: 'relative' }}>
               <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }} />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"}
                 className="form-control" 
                 placeholder="••••••••" 
-                style={{ paddingLeft: '2.75rem' }}
+                style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
                 value={password}
                 onChange={handlePasswordChange}
                 disabled={isLoading}
@@ -230,6 +231,27 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 minLength={6}
                 maxLength={100}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  padding: '0.5rem',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
