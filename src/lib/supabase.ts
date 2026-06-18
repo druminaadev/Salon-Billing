@@ -9,6 +9,8 @@ export type PaymentMethodDB = 'Cash' | 'UPI' | 'Card' | 'Bank Transfer' | 'Onlin
 export type ExpensePriorityDB = 'Low' | 'Medium' | 'High';
 export type ExpenseRecurrenceDB = 'One Time' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
 export type CustomerGenderDB = 'Male' | 'Female';
+export type StaffRoleDB = 'Stylist' | 'Barber' | 'Therapist' | 'Manager' | 'Other';
+export type StaffStatusDB = 'Active' | 'Inactive';
 
 export interface BillingRow {
   id: string;
@@ -94,6 +96,25 @@ export interface ExpenseInsert {
   receipt_url: string | null;
 }
 
+export interface StaffRow {
+  id: string;
+  name: string;
+  role: StaffRoleDB;
+  mobile_number: string;
+  status: StaffStatusDB;
+  join_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StaffInsert {
+  name: string;
+  role: StaffRoleDB;
+  mobile_number: string;
+  status: StaffStatusDB;
+  join_date: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -111,6 +132,11 @@ export type Database = {
         Row: ExpenseRow;
         Insert: ExpenseInsert;
         Update: Partial<ExpenseInsert>;
+      };
+      staff: {
+        Row: StaffRow;
+        Insert: StaffInsert;
+        Update: Partial<StaffInsert>;
       };
     };
   };

@@ -43,6 +43,20 @@ export interface Expense {
   receiptUrl?: string;
 }
 
-export type ViewState = 'dashboard' | 'billings' | 'expenses' | 'new-billing' | 'new-expense' | 'view-billing' | 'edit-billing' | 'view-expense' | 'edit-expense';
+export type ViewState = 'dashboard' | 'billings' | 'expenses' | 'new-billing' | 'new-expense' | 'view-billing' | 'edit-billing' | 'view-expense' | 'edit-expense' | 'staff' | 'new-staff' | 'edit-staff' | 'view-staff';
 
 export type TimeframeFilter = 'today' | 'week' | 'month' | 'all';
+
+export type StaffRole = 'Stylist' | 'Barber' | 'Therapist' | 'Manager' | 'Other';
+export type StaffStatus = 'Active' | 'Inactive';
+
+export interface Staff {
+  id: string;
+  name: string;
+  role: StaffRole;
+  mobileNumber: string;
+  status: StaffStatus;
+  joinDate: string; // YYYY-MM-DD
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
+}
