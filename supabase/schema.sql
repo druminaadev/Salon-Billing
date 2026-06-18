@@ -202,3 +202,54 @@ CREATE POLICY "Allow anon delete on expenses"
 -- SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
 -- SELECT schemaname, tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public';
 -- SELECT * FROM pg_policies WHERE schemaname = 'public';
+
+-- ─────────────────────────────────────────
+-- 8. STAFF TABLE
+-- ─────────────────────────────────────────
+
+CREATE TYPE staff_role AS ENUM (
+  'Stylist', 'Barber', 'Therapist', 'Manager', 'Other'
+);
+
+CREATE TYPE staff_status AS ENUM (
+  'Active', 'Inactive'
+);
+
+CREATE TABLE IF NOT EXISTS staff (
+  id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            TEXT            NOT NULL CHECK (char_length(name) <= 100),
+  role            staff_role      NOT NULL DEFAULT 'Stylist',
+  mobile_number   TEXT            NOT NULL CHECK (char_length(mobile_number) <= 10 AND mobile_number ~ '^[0-9]*$'),
+  status          staff_status    NOT NULL DEFAULT 'Active',
+  join_date       DATE            NOT NULL DEFAULT CURRENT_DATE,
+  created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
+);
+
+CREATE TRIGGER staff_updated_at
+  BEFORE UPDATE ON staff
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anon select on staff"
+  ON staff FOR SELECT
+  TO anon
+  USING (true);
+
+CREATE POLICY "Allow anon insert on staff"
+  ON staff FOR INSERT
+  TO anon
+  WITH CHECK (true);
+
+CREATE POLICY "Allow anon update on staff"
+  ON staff FOR UPDATE
+  TO anon
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "Allow anon delete on staff"
+  ON staff FOR DELETE
+  TO anon
+  USING (true);
+

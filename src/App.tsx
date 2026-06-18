@@ -7,9 +7,12 @@ import { BillingForm } from './components/forms/BillingForm';
 import { ExpenseForm } from './components/forms/ExpenseForm';
 import { BillingView } from './components/BillingView';
 import { ExpenseView } from './components/ExpenseView';
+import { Staffs } from './components/Staffs';
+import { StaffForm } from './components/forms/StaffForm';
+import { StaffView } from './components/StaffView';
 import { Login } from './components/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import type { ViewState, Billing, Expense, TimeframeFilter } from './types';
+import type { ViewState, Billing, Expense, TimeframeFilter, Staff } from './types';
 import {
   createSession,
   destroySession,
@@ -30,6 +33,10 @@ import {
   createExpense,
   updateExpense,
   deleteExpense,
+  fetchStaffs,
+  createStaff,
+  updateStaff,
+  deleteStaff,
 } from './lib/database';
 
 import { Toaster, toast } from 'react-hot-toast';
@@ -45,12 +52,14 @@ function App() {
   // Data state — starts empty, loaded from Supabase
   const [billings, setBillings] = useState<Billing[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [staffs, setStaffs] = useState<Staff[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => isSessionValid());
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedBilling, setSelectedBilling] = useState<Billing | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 
   // ── Security: session check on visibility change ────────────────────────
   useEffect(() => {
@@ -76,12 +85,14 @@ function App() {
   const loadData = useCallback(async () => {
     setIsLoadingData(true);
     try {
-      const [billingsData, expensesData] = await Promise.all([
+      const [billingsData, expensesData, staffsData] = await Promise.all([
         fetchBillings(),
         fetchExpenses(),
+        fetchStaffs(),
       ]);
       setBillings(billingsData);
       setExpenses(expensesData);
+      setStaffs(staffsData);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load data';
       console.error('[App] loadData error:', message);
@@ -110,6 +121,7 @@ function App() {
     setIsAuthenticated(false);
     setBillings([]);
     setExpenses([]);
+    setStaffs([]);
     setCurrentView('dashboard');
     toast.error(reason || 'Logged out successfully');
   };
@@ -253,6 +265,48 @@ function App() {
     }
   };
 
+  // ── Staff handlers ───────────────────────────────────────────────────────
+  const handleCreateStaff = async (newStaff: Staff) => {
+    const loadingToast = toast.loading('Saving staff member...');
+    try {
+      const created = await createStaff(newStaff);
+      setStaffs((prev) => [created, ...prev]);
+      setCurrentView('staff');
+      logSecurityEvent('STAFF_CREATED', { id: created.id });
+      toast.success('Staff Member Added Successfully!', { id: loadingToast });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add staff member';
+      toast.error(message, { id: loadingToast });
+    }
+  };
+
+  const handleUpdateStaff = async (updatedStaff: Staff) => {
+    const loadingToast = toast.loading('Updating staff member...');
+    try {
+      const updated = await updateStaff(updatedStaff);
+      setStaffs((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      setCurrentView('staff');
+      logSecurityEvent('STAFF_UPDATED', { id: updated.id });
+      toast.success('Staff Member Updated Successfully!', { id: loadingToast });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update staff member';
+      toast.error(message, { id: loadingToast });
+    }
+  };
+
+  const handleDeleteStaff = async (id: string) => {
+    const loadingToast = toast.loading('Deleting staff member...');
+    try {
+      await deleteStaff(id);
+      setStaffs((prev) => prev.filter((s) => s.id !== id));
+      logSecurityEvent('STAFF_DELETED', { id });
+      toast.success('Staff Member Deleted Successfully!', { id: loadingToast });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete staff member';
+      toast.error(message, { id: loadingToast });
+    }
+  };
+
   // ── Loading screen ───────────────────────────────────────────────────────
   if (isAuthenticated && isLoadingData) {
     return (
@@ -302,6 +356,7 @@ function App() {
         return (
           <Billings
             billings={billings}
+            staffs={staffs}
             onNavigate={setCurrentView}
             globalTimeframe={globalTimeframe}
             onView={(billing) => {
@@ -340,6 +395,7 @@ function App() {
             <BillingForm
               onSubmit={handleCreateBilling}
               onCancel={() => setCurrentView('billings')}
+              staffs={staffs}
             />
           </div>
         );
@@ -361,6 +417,7 @@ function App() {
               initialData={selectedBilling}
               onSubmit={handleUpdateBilling}
               onCancel={() => setCurrentView('billings')}
+              staffs={staffs}
             />
           </div>
         ) : (
@@ -412,6 +469,60 @@ function App() {
             onNavigate={setCurrentView}
             timeframe={globalTimeframe}
           />
+        );
+
+      case 'staff':
+        return (
+          <Staffs
+            staffs={staffs}
+            billings={billings}
+            globalTimeframe={globalTimeframe}
+            onNavigate={setCurrentView}
+            onView={(staff) => {
+              setSelectedStaff(staff);
+              setCurrentView('view-staff');
+            }}
+            onEdit={(staff) => {
+              setSelectedStaff(staff);
+              setCurrentView('edit-staff');
+            }}
+            onDelete={handleDeleteStaff}
+          />
+        );
+
+      case 'new-staff':
+        return (
+          <div className="animate-fade-in">
+            <StaffForm
+              onSubmit={handleCreateStaff}
+              onCancel={() => setCurrentView('staff')}
+            />
+          </div>
+        );
+
+      case 'edit-staff':
+        return selectedStaff ? (
+          <div className="animate-fade-in">
+            <StaffForm
+              initialData={selectedStaff}
+              onSubmit={handleUpdateStaff}
+              onCancel={() => setCurrentView('staff')}
+            />
+          </div>
+        ) : (
+          <Staffs staffs={staffs} billings={billings} globalTimeframe={globalTimeframe} onNavigate={setCurrentView} onView={() => {}} onEdit={() => {}} onDelete={() => {}} />
+        );
+
+      case 'view-staff':
+        return selectedStaff ? (
+          <StaffView
+            staff={selectedStaff}
+            billings={billings}
+            globalTimeframe={globalTimeframe}
+            onBack={() => setCurrentView('staff')}
+          />
+        ) : (
+          <Staffs staffs={staffs} billings={billings} globalTimeframe={globalTimeframe} onNavigate={setCurrentView} onView={() => {}} onEdit={() => {}} onDelete={() => {}} />
         );
 
       default:

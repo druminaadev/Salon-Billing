@@ -6,8 +6,10 @@ import type {
   ExpenseRow,
   BillingInsert,
   ExpenseInsert,
+  StaffRow,
+  StaffInsert,
 } from './supabase';
-import type { Billing, Expense, ServiceItem } from '../types';
+import type { Billing, Expense, ServiceItem, Staff } from '../types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Type Mappers — DB rows ↔ App types
@@ -60,6 +62,19 @@ function mapExpenseRowToApp(row: ExpenseRow): Expense {
   };
 }
 
+function mapStaffRowToApp(row: StaffRow): Staff {
+  return {
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    mobileNumber: row.mobile_number,
+    status: row.status,
+    joinDate: row.join_date,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 function mapBillingToInsertRow(billing: Billing): BillingInsert {
   return {
     // serial_number is GENERATED ALWAYS AS IDENTITY — DB handles it
@@ -89,6 +104,16 @@ function mapExpenseToInsertRow(expense: Expense): ExpenseInsert {
     priority: expense.priority,
     recurrence: expense.recurrence,
     receipt_url: expense.receiptUrl ?? null,
+  };
+}
+
+function mapStaffToInsertRow(staff: Staff): StaffInsert {
+  return {
+    name: staff.name,
+    role: staff.role,
+    mobile_number: staff.mobileNumber,
+    status: staff.status,
+    join_date: staff.joinDate,
   };
 }
 
@@ -297,6 +322,63 @@ export async function deleteExpense(id: string): Promise<void> {
   const { error } = await supabase.from('expenses').delete().eq('id', id);
   if (error) {
     console.error('[DB] deleteExpense error:', error.message);
+    throw new Error(error.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STAFF CRUD
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function fetchStaffs(): Promise<Staff[]> {
+  const { data, error } = await supabase
+    .from('staff')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[DB] fetchStaffs error:', error.message);
+    throw new Error(error.message);
+  }
+
+  return (data as StaffRow[]).map(mapStaffRowToApp);
+}
+
+export async function createStaff(staff: Staff): Promise<Staff> {
+  const { data, error } = await supabase
+    .from('staff')
+    .insert(mapStaffToInsertRow(staff) as any)
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error('[DB] createStaff error:', error?.message);
+    throw new Error(error?.message ?? 'Failed to create staff');
+  }
+
+  return mapStaffRowToApp(data as StaffRow);
+}
+
+export async function updateStaff(staff: Staff): Promise<Staff> {
+  const { data, error } = await supabase
+    .from('staff')
+    .update(mapStaffToInsertRow(staff) as any)
+    .eq('id', staff.id)
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error('[DB] updateStaff error:', error?.message);
+    throw new Error(error?.message ?? 'Failed to update staff');
+  }
+
+  return mapStaffRowToApp(data as StaffRow);
+}
+
+export async function deleteStaff(id: string): Promise<void> {
+  const { error } = await supabase.from('staff').delete().eq('id', id);
+  if (error) {
+    console.error('[DB] deleteStaff error:', error.message);
     throw new Error(error.message);
   }
 }

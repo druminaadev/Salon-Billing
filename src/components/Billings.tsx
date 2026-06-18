@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import type { Billing, ViewState, PaymentMethod, TimeframeFilter } from '../types';
+import type { Billing, ViewState, PaymentMethod, TimeframeFilter, Staff } from '../types';
 import { Download, FileText, FileSpreadsheet, Plus, Search, Filter, X, Eye, Edit, Trash2 } from 'lucide-react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
 
 interface BillingsProps {
   billings: Billing[];
+  staffs: Staff[];
   onNavigate: (view: ViewState) => void;
   globalTimeframe: TimeframeFilter;
   onView: (billing: Billing) => void;
@@ -13,9 +14,10 @@ interface BillingsProps {
   onDelete: (id: string) => void;
 }
 
-export const Billings: React.FC<BillingsProps> = ({ billings, onNavigate, globalTimeframe, onView, onEdit, onDelete }) => {
+export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate, globalTimeframe, onView, onEdit, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<PaymentMethod | ''>('');
+  const [staffFilter, setStaffFilter] = useState('');
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -47,6 +49,7 @@ export const Billings: React.FC<BillingsProps> = ({ billings, onNavigate, global
       b.services.some(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesPayment = paymentFilter ? b.paymentMethod === paymentFilter : true;
+    const matchesStaff = staffFilter ? b.services.some(s => s.serviceBy === staffFilter) : true;
     const matchesMinAmount = minAmount ? b.grandTotal >= Number(minAmount) : true;
     const matchesMaxAmount = maxAmount ? b.grandTotal <= Number(maxAmount) : true;
 
@@ -66,7 +69,7 @@ export const Billings: React.FC<BillingsProps> = ({ billings, onNavigate, global
       }
     }
 
-    return matchesSearch && matchesPayment && matchesMinAmount && matchesMaxAmount && matchesDate;
+    return matchesSearch && matchesPayment && matchesStaff && matchesMinAmount && matchesMaxAmount && matchesDate;
   });
 
   const formatCurrency = (amount: number) => {
@@ -91,6 +94,7 @@ export const Billings: React.FC<BillingsProps> = ({ billings, onNavigate, global
   const clearAllFilters = () => {
     setSearchTerm('');
     setPaymentFilter('');
+    setStaffFilter('');
     setMinAmount('');
     setMaxAmount('');
     setStartDate(format(new Date(), 'yyyy-MM-dd'));
@@ -164,6 +168,13 @@ export const Billings: React.FC<BillingsProps> = ({ billings, onNavigate, global
                 <option value="Online Payment">Online Payment</option>
               </select>
             </div>
+            <div>
+              <label className="form-label">Staff Member</label>
+              <select className="form-control" value={staffFilter} onChange={e => setStaffFilter(e.target.value)}>
+                <option value="">All Staff</option>
+                {staffs.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              </select>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
               <div>
                 <label className="form-label">Min Amount (₹)</label>
@@ -190,11 +201,12 @@ export const Billings: React.FC<BillingsProps> = ({ billings, onNavigate, global
         )}
 
         {/* Active Filters Chips */}
-        {(paymentFilter || minAmount || maxAmount || searchTerm || startDate || endDate) && (
+        {(paymentFilter || staffFilter || minAmount || maxAmount || searchTerm || startDate || endDate) && (
           <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Active Filters:</span>
             {searchTerm && <div className="filter-chip">Search: {searchTerm} <button onClick={() => setSearchTerm('')}><X size={14} /></button></div>}
             {paymentFilter && <div className="filter-chip">Payment: {paymentFilter} <button onClick={() => setPaymentFilter('')}><X size={14} /></button></div>}
+            {staffFilter && <div className="filter-chip">Staff: {staffFilter} <button onClick={() => setStaffFilter('')}><X size={14} /></button></div>}
             {minAmount && <div className="filter-chip">Min ₹{minAmount} <button onClick={() => setMinAmount('')}><X size={14} /></button></div>}
             {maxAmount && <div className="filter-chip">Max ₹{maxAmount} <button onClick={() => setMaxAmount('')}><X size={14} /></button></div>}
             {startDate && <div className="filter-chip">From: {startDate} <button onClick={() => setStartDate('')}><X size={14} /></button></div>}

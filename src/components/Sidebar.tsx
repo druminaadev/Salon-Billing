@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ViewState } from '../types';
-import { LayoutDashboard, ReceiptText, Plus, LogOut, ChevronLeft, ChevronRight, X, Wallet } from 'lucide-react';
+import { LayoutDashboard, ReceiptText, Plus, LogOut, ChevronLeft, ChevronRight, X, Wallet, Users } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -136,6 +136,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isCol
         <NavSection title="Expenses" isCollapsed={isCollapsed}>
           <NavButton view={['new-expense', 'edit-expense']} icon={<Plus size={18} />} label="New Expense" accent="var(--danger)" />
           <NavButton view={['expenses', 'view-expense']} icon={<Wallet size={18} />} label="All Expenses" accent="#F59E0B" />
+        </NavSection>
+
+        <NavSection title="Team" isCollapsed={isCollapsed}>
+          <NavButton view={['new-staff', 'edit-staff']} icon={<Plus size={18} />} label="Add Staff" accent="#8B5CF6" />
+          <NavButton view={['staff', 'view-staff']} icon={<Users size={18} />} label="All Staff" accent="#8B5CF6" />
         </NavSection>
 
       </nav>

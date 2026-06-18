@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Billing, ServiceItem, PaymentMethod } from '../../types';
+import type { Billing, ServiceItem, PaymentMethod, Staff } from '../../types';
 import { X, Plus, Trash2, CheckCircle2, User, Scissors, CreditCard, Hash } from 'lucide-react';
 import { ServiceSelect } from './ServiceSelect';
 import type { Gender } from '../../data/services';
@@ -8,6 +8,7 @@ interface BillingFormProps {
   onSubmit: (billing: Billing) => void;
   onCancel: () => void;
   initialData?: Billing;
+  staffs: Staff[];
 }
 
 const fmt = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n || 0);
@@ -32,7 +33,7 @@ const Section: React.FC<{ icon: React.ReactNode; title: string; accent: string; 
   </div>
 );
 
-export const BillingForm: React.FC<BillingFormProps> = ({ onSubmit, onCancel, initialData }) => {
+export const BillingForm: React.FC<BillingFormProps> = ({ onSubmit, onCancel, initialData, staffs }) => {
   const [customerName, setCustomerName] = useState(initialData?.customerName || '');
   const [mobileNumber, setMobileNumber] = useState(initialData?.mobileNumber || '');
   const [customerGender, setCustomerGender] = useState<Gender>(initialData?.customerGender || 'Male');
@@ -167,9 +168,18 @@ export const BillingForm: React.FC<BillingFormProps> = ({ onSubmit, onCancel, in
                     : s
                   ));
                 }} />
-                <input type="text" className="form-control" placeholder="Staff name" value={service.serviceBy || ''}
+                <select className="form-control" value={service.serviceBy || ''}
                   onChange={e => updateService(service.id, 'serviceBy', e.target.value)}
-                  style={{ padding: '0.45rem 0.6rem', fontSize: '0.82rem' }} />
+                  style={{ padding: '0.45rem 0.6rem', fontSize: '0.82rem' }}>
+                  <option value="">Select Staff</option>
+                  {staffs.filter(s => s.status === 'Active').map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                  {/* Fallback for existing data where staff might be inactive or custom */}
+                  {service.serviceBy && !staffs.some(s => s.name === service.serviceBy && s.status === 'Active') && (
+                    <option value={service.serviceBy}>{service.serviceBy}</option>
+                  )}
+                </select>
                 <input type="number" className="form-control" placeholder="0" min="0"
                   value={service.price === 0 ? '' : service.price}
                   onChange={e => updateService(service.id, 'price', Number(e.target.value))}
