@@ -26,7 +26,7 @@ CREATE TYPE customer_gender AS ENUM ('Male', 'Female');
 
 CREATE TABLE IF NOT EXISTS billings (
   id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-  serial_number   BIGINT        GENERATED ALWAYS AS IDENTITY,  -- Auto: 1, 2, 3…
+  serial_number   BIGINT,  -- Assigned via trigger: MAX() + 1
   customer_name   TEXT          NOT NULL CHECK (char_length(customer_name) <= 100),
   mobile_number   TEXT          NOT NULL CHECK (char_length(mobile_number) <= 10 AND mobile_number ~ '^[0-9]*$'),
   customer_gender customer_gender,
@@ -52,6 +52,21 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER billings_updated_at
   BEFORE UPDATE ON billings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Auto-assign serial number
+CREATE OR REPLACE FUNCTION assign_billing_serial()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.serial_number IS NULL THEN
+    SELECT COALESCE(MAX(serial_number), 0) + 1 INTO NEW.serial_number FROM billings;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER billings_set_serial
+  BEFORE INSERT ON billings
+  FOR EACH ROW EXECUTE FUNCTION assign_billing_serial();
 
 -- Index for fast date-based queries
 CREATE INDEX IF NOT EXISTS idx_billings_created_at ON billings (created_at DESC);
@@ -81,7 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_billing_services_billing_id ON billing_services (
 
 CREATE TABLE IF NOT EXISTS expenses (
   id              UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
-  serial_number   BIGINT        GENERATED ALWAYS AS IDENTITY,  -- Auto: 1, 2, 3…
+  serial_number   BIGINT,  -- Assigned via trigger: MAX() + 1
   title           TEXT                 NOT NULL CHECK (char_length(title) <= 100),
   description     TEXT                 NOT NULL DEFAULT '' CHECK (char_length(description) <= 500),
   amount          NUMERIC(12,2)        NOT NULL DEFAULT 0 CHECK (amount >= 0),
@@ -96,6 +111,20 @@ CREATE TABLE IF NOT EXISTS expenses (
   created_at      TIMESTAMPTZ          NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ          NOT NULL DEFAULT now()
 );
+
+CREATE OR REPLACE FUNCTION assign_expense_serial()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.serial_number IS NULL THEN
+    SELECT COALESCE(MAX(serial_number), 0) + 1 INTO NEW.serial_number FROM expenses;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER expenses_set_serial
+  BEFORE INSERT ON expenses
+  FOR EACH ROW EXECUTE FUNCTION assign_expense_serial();
 
 CREATE TRIGGER expenses_updated_at
   BEFORE UPDATE ON expenses

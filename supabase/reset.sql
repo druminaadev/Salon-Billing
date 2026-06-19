@@ -13,8 +13,10 @@ DROP TABLE IF EXISTS billing_services CASCADE;
 DROP TABLE IF EXISTS billings         CASCADE;
 DROP TABLE IF EXISTS expenses         CASCADE;
 
--- 3. Drop the helper function
-DROP FUNCTION IF EXISTS update_updated_at_column();
+-- 3. Drop the helper functions
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+DROP FUNCTION IF EXISTS assign_billing_serial() CASCADE;
+DROP FUNCTION IF EXISTS assign_expense_serial() CASCADE;
 
 -- 4. Drop custom ENUM types
 DROP TYPE IF EXISTS payment_method     CASCADE;

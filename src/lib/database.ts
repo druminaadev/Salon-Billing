@@ -77,7 +77,7 @@ function mapStaffRowToApp(row: StaffRow): Staff {
 
 function mapBillingToInsertRow(billing: Billing): BillingInsert {
   return {
-    // serial_number is GENERATED ALWAYS AS IDENTITY — DB handles it
+    // serial_number is handled by a database trigger (assign_billing_serial)
     customer_name: billing.customerName,
     mobile_number: billing.mobileNumber,
     customer_gender: billing.customerGender ?? null,
@@ -92,7 +92,7 @@ function mapBillingToInsertRow(billing: Billing): BillingInsert {
 
 function mapExpenseToInsertRow(expense: Expense): ExpenseInsert {
   return {
-    // serial_number is GENERATED ALWAYS AS IDENTITY — DB handles it
+    // serial_number is handled by a database trigger (assign_expense_serial)
     title: expense.title,
     description: expense.description,
     amount: expense.amount,
