@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { ViewState, TimeframeFilter } from '../types';
+import type { ViewState, TimeframeFilter, ThemeColor } from '../types';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { LayoutDashboard, ReceiptText, CreditCard, Plus } from 'lucide-react';
@@ -12,13 +12,16 @@ interface LayoutProps {
   toggleTheme: () => void;
   globalTimeframe: TimeframeFilter;
   setGlobalTimeframe: (timeframe: TimeframeFilter) => void;
+  accentColor: ThemeColor;
+  setAccentColor: (color: ThemeColor) => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   onLogout?: () => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
-  children, currentView, onNavigate, isDarkMode, toggleTheme, globalTimeframe, setGlobalTimeframe, onLogout 
+  children, currentView, onNavigate, isDarkMode, toggleTheme, globalTimeframe, setGlobalTimeframe, accentColor, setAccentColor, sidebarCollapsed, setSidebarCollapsed, onLogout 
 }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // For desktop toggle
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // For mobile sliding
 
   const getBottomNavStyle = (view: ViewState) => ({
@@ -36,9 +39,9 @@ export const Layout: React.FC<LayoutProps> = ({
           onNavigate(view);
           setIsMobileSidebarOpen(false);
         }}
-        isCollapsed={!isSidebarOpen}
+        isCollapsed={sidebarCollapsed}
         isMobileOpen={isMobileSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         onLogout={onLogout}
       />
@@ -52,6 +55,8 @@ export const Layout: React.FC<LayoutProps> = ({
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
           globalTimeframe={globalTimeframe}
           setGlobalTimeframe={setGlobalTimeframe}
+          accentColor={accentColor}
+          setAccentColor={setAccentColor}
         />
 
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem 1rem 1rem' }}>

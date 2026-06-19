@@ -69,7 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isCol
   };
 
   return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`} style={{ display: 'flex', flexDirection: 'column' }}>
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`} style={{ 
+      display: 'flex', flexDirection: 'column',
+      background: 'color-mix(in srgb, var(--surface-color) 80%, transparent)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderRight: '1px solid var(--border-color)',
+    }}>
 
       {/* Header */}
       <div style={{
@@ -81,8 +87,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isCol
         {!isCollapsed ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
             <div style={{ overflow: 'hidden' }}>
-              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}>Hair Ahmedabad</h2>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontWeight: 500, letterSpacing: '0.02em', marginTop: '0.15rem' }}>Unisex Salon</div>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}>Salon Manager</h2>
+              <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, letterSpacing: '0.02em', marginTop: '0.15rem' }}>PRO EDITION</div>
             </div>
           </div>
         ) : (

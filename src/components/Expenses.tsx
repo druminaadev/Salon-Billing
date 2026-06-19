@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import type { Expense, ViewState, PaymentMethod, ExpensePriority, TimeframeFilter } from '../types';
-import { Download, FileText, FileSpreadsheet, Plus, Search, Filter, X, Eye, Edit, Trash2 } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Plus, Search, Filter, X, Eye, Edit, Trash2, Wallet } from 'lucide-react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
+import { ExpenseView } from './ExpenseView';
 
 interface ExpensesProps {
   expenses: Expense[];
   onNavigate: (view: ViewState) => void;
   globalTimeframe: TimeframeFilter;
+  currentView?: ViewState;
+  selectedExpense?: Expense | null;
   onView: (expense: Expense) => void;
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
@@ -18,7 +21,7 @@ const DEFAULT_CATEGORIES = [
   'Internet', 'Marketing', 'Equipment', 'Maintenance', 'Miscellaneous'
 ];
 
-export const Expenses: React.FC<ExpensesProps> = ({ expenses, onNavigate, globalTimeframe, onView, onEdit, onDelete }) => {
+export const Expenses: React.FC<ExpensesProps> = ({ expenses, onNavigate, globalTimeframe, currentView, selectedExpense, onView, onEdit, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<PaymentMethod | ''>('');
@@ -117,9 +120,12 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onNavigate, global
     return `expenses_${startDate || today}`;
   };
 
+  const isSplitPane = currentView === 'view-expense' && selectedExpense;
+
   return (
-    <div className="animate-fade-in">
-      <div className="topbar">
+    <div className={`animate-fade-in ${isSplitPane ? 'split-pane-container' : ''}`}>
+      <div className={isSplitPane ? 'split-pane-list' : ''}>
+        <div className="topbar">
         <div>
           <h1 style={{ marginBottom: '0.25rem' }}>Expenses Management</h1>
           <p>Track and manage your salon's outgoing costs.</p>
@@ -240,30 +246,32 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onNavigate, global
               <th>Serial No.</th>
               <th>Date</th>
               <th>Expense Title</th>
-              <th>Vendor</th>
+              {!isSplitPane && <th>Vendor</th>}
               <th>Amount</th>
-              <th>Payment</th>
-              <th>Priority</th>
+              {!isSplitPane && <th>Payment</th>}
+              {!isSplitPane && <th>Priority</th>}
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredExpenses.map(e => (
-              <tr key={e.id}>
+              <tr key={e.id} style={{ background: isSplitPane && selectedExpense?.id === e.id ? 'var(--surface-hover)' : 'transparent' }}>
                 <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{e.serialNumber}</td>
                 <td>{format(new Date(e.date), 'MMM dd, yyyy')}</td>
                 <td>
                   <div style={{ fontWeight: 500 }}>{e.title}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{e.category}</div>
                 </td>
-                <td>{e.vendorName}</td>
+                {!isSplitPane && <td>{e.vendorName}</td>}
                 <td style={{ fontWeight: 600 }}>{formatCurrency(e.amount)}</td>
-                <td><span className="badge badge-neutral">{e.paymentMethod}</span></td>
-                <td>
-                  <span className={`badge ${e.priority === 'High' ? 'badge-danger' : e.priority === 'Medium' ? 'badge-warning' : 'badge-success'}`}>
-                    {e.priority}
-                  </span>
-                </td>
+                {!isSplitPane && <td><span className="badge badge-neutral">{e.paymentMethod}</span></td>}
+                {!isSplitPane && (
+                  <td>
+                    <span className={`badge ${e.priority === 'High' ? 'badge-danger' : e.priority === 'Medium' ? 'badge-warning' : 'badge-success'}`}>
+                      {e.priority}
+                    </span>
+                  </td>
+                )}
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                     <button 
@@ -300,14 +308,31 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onNavigate, global
             ))}
             {filteredExpenses.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
-                  No expenses found.
+                <td colSpan={isSplitPane ? 5 : 8}>
+                  <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '4rem 1rem' }}>
+                    <Wallet size={48} style={{ opacity: 0.2, marginBottom: '1rem', color: 'var(--danger)' }} />
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-secondary)' }}>No expenses found</h3>
+                    <p style={{ marginTop: '0.5rem', maxWidth: '300px', margin: '0.5rem auto 0' }}>Try adjusting your filters or record a new expense.</p>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+      </div>
+
+      {isSplitPane && (
+        <div className="split-pane-detail animate-fade-in">
+          {selectedExpense ? (
+            <ExpenseView expense={selectedExpense} onBack={() => onNavigate('expenses')} />
+          ) : (
+            <div className="split-pane-empty">
+              <p>Select an expense to view details</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

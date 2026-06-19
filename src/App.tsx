@@ -5,14 +5,12 @@ import { Billings } from './components/Billings';
 import { Expenses } from './components/Expenses';
 import { BillingForm } from './components/forms/BillingForm';
 import { ExpenseForm } from './components/forms/ExpenseForm';
-import { BillingView } from './components/BillingView';
-import { ExpenseView } from './components/ExpenseView';
 import { Staffs } from './components/Staffs';
 import { StaffForm } from './components/forms/StaffForm';
-import { StaffView } from './components/StaffView';
+import { SlideOver } from './components/SlideOver';
 import { Login } from './components/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import type { ViewState, Billing, Expense, TimeframeFilter, Staff } from './types';
+import type { ViewState, Billing, Expense, TimeframeFilter, Staff, ThemeColor } from './types';
 import {
   createSession,
   destroySession,
@@ -57,6 +55,8 @@ function App() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => isSessionValid());
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [accentColor, setAccentColor] = useState<ThemeColor>('purple');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<Billing | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
@@ -80,6 +80,11 @@ function App() {
       document.body.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  // ── Accent Color class ──────────────────────────────────────────────────
+  useEffect(() => {
+    document.body.setAttribute('data-theme', accentColor);
+  }, [accentColor]);
 
   // ── Load data from Supabase on auth ─────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -353,176 +358,116 @@ function App() {
         );
 
       case 'billings':
+      case 'new-billing':
+      case 'edit-billing':
+      case 'view-billing':
         return (
-          <Billings
-            billings={billings}
-            staffs={staffs}
-            onNavigate={setCurrentView}
-            globalTimeframe={globalTimeframe}
-            onView={(billing) => {
-              setSelectedBilling(billing);
-              setCurrentView('view-billing');
-            }}
-            onEdit={(billing) => {
-              setSelectedBilling(billing);
-              setCurrentView('edit-billing');
-            }}
-            onDelete={handleDeleteBilling}
-          />
+          <>
+            <Billings
+              billings={billings}
+              staffs={staffs}
+              onNavigate={setCurrentView}
+              globalTimeframe={globalTimeframe}
+              currentView={currentView}
+              selectedBilling={selectedBilling}
+              onView={(billing) => {
+                setSelectedBilling(billing);
+                setCurrentView('view-billing');
+              }}
+              onEdit={(billing) => {
+                setSelectedBilling(billing);
+                setCurrentView('edit-billing');
+              }}
+              onDelete={handleDeleteBilling}
+            />
+            <SlideOver 
+              isOpen={currentView === 'new-billing' || currentView === 'edit-billing'} 
+              onClose={() => setCurrentView('billings')} 
+              title={currentView === 'new-billing' ? 'Create New Invoice' : 'Edit Invoice'}
+            >
+              {currentView === 'new-billing' && (
+                <BillingForm onSubmit={handleCreateBilling} onCancel={() => setCurrentView('billings')} staffs={staffs} />
+              )}
+              {currentView === 'edit-billing' && selectedBilling && (
+                <BillingForm initialData={selectedBilling} onSubmit={handleUpdateBilling} onCancel={() => setCurrentView('billings')} staffs={staffs} />
+              )}
+            </SlideOver>
+          </>
         );
 
       case 'expenses':
-        return (
-          <Expenses
-            expenses={expenses}
-            onNavigate={setCurrentView}
-            globalTimeframe={globalTimeframe}
-            onView={(expense) => {
-              setSelectedExpense(expense);
-              setCurrentView('view-expense');
-            }}
-            onEdit={(expense) => {
-              setSelectedExpense(expense);
-              setCurrentView('edit-expense');
-            }}
-            onDelete={handleDeleteExpense}
-          />
-        );
-
-      case 'new-billing':
-        return (
-          <div className="animate-fade-in">
-            <BillingForm
-              onSubmit={handleCreateBilling}
-              onCancel={() => setCurrentView('billings')}
-              staffs={staffs}
-            />
-          </div>
-        );
-
       case 'new-expense':
-        return (
-          <div className="animate-fade-in">
-            <ExpenseForm
-              onSubmit={handleCreateExpense}
-              onCancel={() => setCurrentView('expenses')}
-            />
-          </div>
-        );
-
-      case 'edit-billing':
-        return selectedBilling ? (
-          <div className="animate-fade-in">
-            <BillingForm
-              initialData={selectedBilling}
-              onSubmit={handleUpdateBilling}
-              onCancel={() => setCurrentView('billings')}
-              staffs={staffs}
-            />
-          </div>
-        ) : (
-          <Dashboard
-            billings={billings}
-            expenses={expenses}
-            onNavigate={setCurrentView}
-            timeframe={globalTimeframe}
-          />
-        );
-
-      case 'view-billing':
-        return selectedBilling ? (
-          <BillingView billing={selectedBilling} onBack={() => setCurrentView('billings')} />
-        ) : (
-          <Dashboard
-            billings={billings}
-            expenses={expenses}
-            onNavigate={setCurrentView}
-            timeframe={globalTimeframe}
-          />
-        );
-
       case 'edit-expense':
-        return selectedExpense ? (
-          <div className="animate-fade-in">
-            <ExpenseForm
-              initialData={selectedExpense}
-              onSubmit={handleUpdateExpense}
-              onCancel={() => setCurrentView('expenses')}
-            />
-          </div>
-        ) : (
-          <Dashboard
-            billings={billings}
-            expenses={expenses}
-            onNavigate={setCurrentView}
-            timeframe={globalTimeframe}
-          />
-        );
-
       case 'view-expense':
-        return selectedExpense ? (
-          <ExpenseView expense={selectedExpense} onBack={() => setCurrentView('expenses')} />
-        ) : (
-          <Dashboard
-            billings={billings}
-            expenses={expenses}
-            onNavigate={setCurrentView}
-            timeframe={globalTimeframe}
-          />
+        return (
+          <>
+            <Expenses
+              expenses={expenses}
+              onNavigate={setCurrentView}
+              globalTimeframe={globalTimeframe}
+              currentView={currentView}
+              selectedExpense={selectedExpense}
+              onView={(expense) => {
+                setSelectedExpense(expense);
+                setCurrentView('view-expense');
+              }}
+              onEdit={(expense) => {
+                setSelectedExpense(expense);
+                setCurrentView('edit-expense');
+              }}
+              onDelete={handleDeleteExpense}
+            />
+            <SlideOver 
+              isOpen={currentView === 'new-expense' || currentView === 'edit-expense'} 
+              onClose={() => setCurrentView('expenses')} 
+              title={currentView === 'new-expense' ? 'Record Expense' : 'Edit Expense'}
+            >
+              {currentView === 'new-expense' && (
+                <ExpenseForm onSubmit={handleCreateExpense} onCancel={() => setCurrentView('expenses')} />
+              )}
+              {currentView === 'edit-expense' && selectedExpense && (
+                <ExpenseForm initialData={selectedExpense} onSubmit={handleUpdateExpense} onCancel={() => setCurrentView('expenses')} />
+              )}
+            </SlideOver>
+          </>
         );
 
       case 'staff':
-        return (
-          <Staffs
-            staffs={staffs}
-            billings={billings}
-            globalTimeframe={globalTimeframe}
-            onNavigate={setCurrentView}
-            onView={(staff) => {
-              setSelectedStaff(staff);
-              setCurrentView('view-staff');
-            }}
-            onEdit={(staff) => {
-              setSelectedStaff(staff);
-              setCurrentView('edit-staff');
-            }}
-            onDelete={handleDeleteStaff}
-          />
-        );
-
       case 'new-staff':
-        return (
-          <div className="animate-fade-in">
-            <StaffForm
-              onSubmit={handleCreateStaff}
-              onCancel={() => setCurrentView('staff')}
-            />
-          </div>
-        );
-
       case 'edit-staff':
-        return selectedStaff ? (
-          <div className="animate-fade-in">
-            <StaffForm
-              initialData={selectedStaff}
-              onSubmit={handleUpdateStaff}
-              onCancel={() => setCurrentView('staff')}
-            />
-          </div>
-        ) : (
-          <Staffs staffs={staffs} billings={billings} globalTimeframe={globalTimeframe} onNavigate={setCurrentView} onView={() => {}} onEdit={() => {}} onDelete={() => {}} />
-        );
-
       case 'view-staff':
-        return selectedStaff ? (
-          <StaffView
-            staff={selectedStaff}
-            billings={billings}
-            globalTimeframe={globalTimeframe}
-            onBack={() => setCurrentView('staff')}
-          />
-        ) : (
-          <Staffs staffs={staffs} billings={billings} globalTimeframe={globalTimeframe} onNavigate={setCurrentView} onView={() => {}} onEdit={() => {}} onDelete={() => {}} />
+        return (
+          <>
+            <Staffs
+              staffs={staffs}
+              billings={billings}
+              globalTimeframe={globalTimeframe}
+              onNavigate={setCurrentView}
+              currentView={currentView}
+              selectedStaff={selectedStaff}
+              onView={(staff) => {
+                setSelectedStaff(staff);
+                setCurrentView('view-staff');
+              }}
+              onEdit={(staff) => {
+                setSelectedStaff(staff);
+                setCurrentView('edit-staff');
+              }}
+              onDelete={handleDeleteStaff}
+            />
+            <SlideOver 
+              isOpen={currentView === 'new-staff' || currentView === 'edit-staff'} 
+              onClose={() => setCurrentView('staff')} 
+              title={currentView === 'new-staff' ? 'Add Staff Member' : 'Edit Staff Member'}
+            >
+              {currentView === 'new-staff' && (
+                <StaffForm onSubmit={handleCreateStaff} onCancel={() => setCurrentView('staff')} />
+              )}
+              {currentView === 'edit-staff' && selectedStaff && (
+                <StaffForm initialData={selectedStaff} onSubmit={handleUpdateStaff} onCancel={() => setCurrentView('staff')} />
+              )}
+            </SlideOver>
+          </>
         );
 
       default:
@@ -559,6 +504,10 @@ function App() {
             onNavigate={setCurrentView}
             isDarkMode={isDarkMode}
             toggleTheme={toggleTheme}
+            accentColor={accentColor}
+            setAccentColor={setAccentColor}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
             globalTimeframe={globalTimeframe}
             setGlobalTimeframe={setGlobalTimeframe}
             onLogout={() => handleLogout('User initiated logout')}

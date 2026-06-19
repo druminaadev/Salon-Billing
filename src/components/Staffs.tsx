@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import type { Staff, ViewState, Billing, TimeframeFilter } from '../types';
 import { Plus, Search, Eye, Edit, Trash2, ShieldCheck, UserX, Users, TrendingUp, Scissors } from 'lucide-react';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
+import { StaffView } from './StaffView';
 
 interface StaffsProps {
   staffs: Staff[];
   billings: Billing[];
   globalTimeframe: TimeframeFilter;
+  currentView?: ViewState;
+  selectedStaff?: Staff | null;
   onNavigate: (view: ViewState) => void;
   onView: (staff: Staff) => void;
   onEdit: (staff: Staff) => void;
   onDelete: (id: string) => void;
 }
 
-export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimeframe, onNavigate, onView, onEdit, onDelete }) => {
+export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimeframe, currentView, selectedStaff, onNavigate, onView, onEdit, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [nameFilter, setNameFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -68,9 +71,12 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
     });
   });
 
+  const isSplitPane = currentView === 'view-staff' && selectedStaff;
+
   return (
-    <div className="animate-fade-in">
-      <div className="topbar">
+    <div className={`animate-fade-in ${isSplitPane ? 'split-pane-container' : ''}`}>
+      <div className={isSplitPane ? 'split-pane-list' : ''}>
+        <div className="topbar">
         <div>
           <h1 style={{ marginBottom: '0.25rem' }}>Staff Management</h1>
           <p>Manage your salon team and view their performance.</p>
@@ -165,16 +171,16 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
           <thead>
             <tr>
               <th>Name</th>
-              <th>Role</th>
+              {!isSplitPane && <th>Role</th>}
               <th>Contact</th>
               <th>Status</th>
-              <th>Joined Date</th>
+              {!isSplitPane && <th>Joined Date</th>}
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredStaffs.map(s => (
-              <tr key={s.id} style={{ opacity: s.status === 'Inactive' ? 0.6 : 1 }}>
+              <tr key={s.id} style={{ opacity: s.status === 'Inactive' ? 0.6 : 1, background: isSplitPane && selectedStaff?.id === s.id ? 'var(--surface-hover)' : 'transparent' }}>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
@@ -183,7 +189,7 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
                     <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{s.name}</span>
                   </div>
                 </td>
-                <td><span className="badge badge-neutral">{s.role}</span></td>
+                {!isSplitPane && <td><span className="badge badge-neutral">{s.role}</span></td>}
                 <td style={{ color: 'var(--text-secondary)' }}>{s.mobileNumber}</td>
                 <td>
                   {s.status === 'Active' ? (
@@ -196,7 +202,7 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
                     </span>
                   )}
                 </td>
-                <td style={{ color: 'var(--text-secondary)' }}>{format(new Date(s.joinDate), 'MMM dd, yyyy')}</td>
+                {!isSplitPane && <td style={{ color: 'var(--text-secondary)' }}>{format(new Date(s.joinDate), 'MMM dd, yyyy')}</td>}
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                     <button className="btn-icon" style={{ color: 'var(--primary)' }} onClick={() => onView(s)} title="View Details">
@@ -216,14 +222,36 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
             ))}
             {filteredStaffs.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                  No staff members found matching your search.
+                <td colSpan={isSplitPane ? 4 : 6}>
+                  <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '4rem 1rem' }}>
+                    <Users size={48} style={{ opacity: 0.2, marginBottom: '1rem', color: 'var(--primary)' }} />
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-secondary)' }}>No staff members found</h3>
+                    <p style={{ marginTop: '0.5rem', maxWidth: '300px', margin: '0.5rem auto 0' }}>Try adjusting your search or add a new staff member to your team.</p>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+      </div>
+
+      {isSplitPane && (
+        <div className="split-pane-detail animate-fade-in">
+          {selectedStaff ? (
+            <StaffView
+              staff={selectedStaff}
+              billings={billings}
+              globalTimeframe={globalTimeframe}
+              onBack={() => onNavigate('staff')}
+            />
+          ) : (
+            <div className="split-pane-empty">
+              <p>Select a staff member to view details</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

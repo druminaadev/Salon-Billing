@@ -60,3 +60,5 @@ export interface Staff {
   createdAt: string; // ISO string
   updatedAt: string; // ISO string
 }
+
+export type ThemeColor = 'purple' | 'emerald' | 'blue' | 'orange';
