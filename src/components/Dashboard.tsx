@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Billing, Expense, TimeframeFilter } from '../types';
-import { TrendingUp, TrendingDown, ArrowRight, Activity, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowRight, Activity, Wallet, FileText } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { format, isToday, isThisWeek, isThisMonth } from 'date-fns';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Billing, ViewState, PaymentMethod, TimeframeFilter, Staff } from '../types';
-import { Download, FileText, FileSpreadsheet, Plus, Search, Filter, X, Eye, Edit, Trash2 } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Plus, Search, Filter, X, Eye, Edit, Trash2, ReceiptText } from 'lucide-react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
 import { BillingView } from './BillingView';
