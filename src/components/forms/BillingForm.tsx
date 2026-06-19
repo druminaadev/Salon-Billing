@@ -89,7 +89,7 @@ export const BillingForm: React.FC<BillingFormProps> = ({ onSubmit, onCancel, in
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.2rem' }}>
             <Hash size={11} style={{ color: 'var(--text-tertiary)' }} />
             <span style={{ fontSize: '0.73rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-              {initialData ? `#${initialData.serialNumber}` : 'Auto-assigned on save'}
+              {initialData ? initialData.serialNumber : 'Auto-assigned on save'}
             </span>
           </div>
         </div>
@@ -147,58 +147,73 @@ export const BillingForm: React.FC<BillingFormProps> = ({ onSubmit, onCancel, in
             </button>
           }
         >
-          {/* Column headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 70px 70px 80px 32px', gap: '0.5rem', alignItems: 'center', marginBottom: '0.4rem', padding: '0 0.25rem' }}>
-            {['Service', 'Staff / Stylist', 'Price ₹', 'Qty', 'Total', ''].map(h => (
-              <span key={h} style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</span>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {services.map(service => (
               <div key={service.id} style={{
-                display: 'grid', gridTemplateColumns: '2fr 1.2fr 70px 70px 80px 32px',
-                gap: '0.5rem', alignItems: 'center',
+                display: 'flex', flexDirection: 'column', gap: '1rem',
                 background: 'var(--bg-color)', border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)', padding: '0.5rem 0.6rem',
+                borderRadius: 'var(--radius-md)', padding: '1rem',
               }}>
-                <ServiceSelect gender={customerGender} value={service.name} onChange={(name, price) => {
-                  setServices(prev => prev.map(s => s.id === service.id
-                    ? { ...s, name, price: s.price === 0 ? price : s.price }
-                    : s
-                  ));
-                }} />
-                <select className="form-control" value={service.serviceBy || ''}
-                  onChange={e => updateService(service.id, 'serviceBy', e.target.value)}
-                  style={{ padding: '0.45rem 0.6rem', fontSize: '0.82rem' }}>
-                  <option value="">Select Staff</option>
-                  {staffs.filter(s => s.status === 'Active').map(s => (
-                    <option key={s.id} value={s.name}>{s.name}</option>
-                  ))}
-                  {/* Fallback for existing data where staff might be inactive or custom */}
-                  {service.serviceBy && !staffs.some(s => s.name === service.serviceBy && s.status === 'Active') && (
-                    <option value={service.serviceBy}>{service.serviceBy}</option>
-                  )}
-                </select>
-                <input type="number" className="form-control" placeholder="0" min="0"
-                  value={service.price === 0 ? '' : service.price}
-                  onChange={e => updateService(service.id, 'price', Number(e.target.value))}
-                  style={{ padding: '0.45rem 0.5rem', fontSize: '0.82rem', textAlign: 'right' }} />
-                <input type="number" className="form-control" placeholder="1" min="1"
-                  value={service.quantity || ''}
-                  onChange={e => updateService(service.id, 'quantity', Number(e.target.value))}
-                  style={{ padding: '0.45rem 0.5rem', fontSize: '0.82rem', textAlign: 'center' }} />
-                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', textAlign: 'right', paddingRight: '0.25rem' }}>
-                  {fmt((service.price || 0) * (service.quantity || 1))}
-                </span>
-                {services.length > 1 ? (
-                  <button type="button" onClick={() => removeService(service.id)} style={{
-                    background: 'var(--danger-bg)', color: 'var(--danger)', border: 'none',
-                    padding: '0.35rem', borderRadius: '7px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Trash2 size={13} />
-                  </button>
-                ) : <span />}
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <Field label="Service Name">
+                      <ServiceSelect gender={customerGender} value={service.name} onChange={(name, price) => {
+                        setServices(prev => prev.map(s => s.id === service.id
+                          ? { ...s, name, price: s.price === 0 ? price : s.price }
+                          : s
+                        ));
+                      }} />
+                    </Field>
+                  </div>
+                  {services.length > 1 ? (
+                    <div style={{ paddingTop: '1.25rem' }}>
+                      <button type="button" onClick={() => removeService(service.id)} style={{
+                        background: 'var(--danger-bg)', color: 'var(--danger)', border: 'none',
+                        padding: '0.6rem', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.75rem', alignItems: 'flex-end' }}>
+                  <Field label="Staff / Stylist" style={{ gridColumn: 'span 2' }}>
+                    <select className="form-control" value={service.serviceBy || ''}
+                      onChange={e => updateService(service.id, 'serviceBy', e.target.value)}
+                      style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}>
+                      <option value="">Select Staff</option>
+                      {staffs.filter(s => s.status === 'Active').map(s => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                      {/* Fallback for existing data where staff might be inactive or custom */}
+                      {service.serviceBy && !staffs.some(s => s.name === service.serviceBy && s.status === 'Active') && (
+                        <option value={service.serviceBy}>{service.serviceBy}</option>
+                      )}
+                    </select>
+                  </Field>
+                  <Field label="Price">
+                    <div className="input-group" style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>₹</span>
+                      <input type="number" className="form-control" placeholder="0" min="0"
+                        value={service.price === 0 ? '' : service.price}
+                        onChange={e => updateService(service.id, 'price', Number(e.target.value))}
+                        style={{ padding: '0.5rem 0.5rem 0.5rem 1.75rem', fontSize: '0.85rem' }} />
+                    </div>
+                  </Field>
+                  <Field label="Qty">
+                    <input type="number" className="form-control" placeholder="1" min="1"
+                      value={service.quantity || ''}
+                      onChange={e => updateService(service.id, 'quantity', Number(e.target.value))}
+                      style={{ padding: '0.5rem', fontSize: '0.85rem', textAlign: 'center' }} />
+                  </Field>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Total</span>
+                    <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--primary)', padding: '0.3rem 0' }}>
+                      {fmt((service.price || 0) * (service.quantity || 1))}
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

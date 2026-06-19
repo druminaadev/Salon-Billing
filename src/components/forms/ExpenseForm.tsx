@@ -88,7 +88,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit, onCancel, in
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
             <Hash size={11} style={{ color: 'var(--text-tertiary)' }} />
             <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>
-              {initialData ? `#${initialData.serialNumber}` : 'Auto-assigned on save'}
+              {initialData ? initialData.serialNumber : 'Auto-assigned on save'}
             </span>
           </div>
         </div>

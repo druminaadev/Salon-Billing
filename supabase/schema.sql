@@ -246,6 +246,7 @@ CREATE TYPE staff_status AS ENUM (
 
 CREATE TABLE IF NOT EXISTS staff (
   id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+  serial_number   BIGINT,         -- Assigned via trigger: MAX() + 1
   name            TEXT            NOT NULL CHECK (char_length(name) <= 100),
   role            staff_role      NOT NULL DEFAULT 'Stylist',
   mobile_number   TEXT            NOT NULL CHECK (char_length(mobile_number) <= 10 AND mobile_number ~ '^[0-9]*$'),
@@ -254,6 +255,20 @@ CREATE TABLE IF NOT EXISTS staff (
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
+
+CREATE OR REPLACE FUNCTION assign_staff_serial()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.serial_number IS NULL THEN
+    SELECT COALESCE(MAX(serial_number), 0) + 1 INTO NEW.serial_number FROM staff;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER staff_set_serial
+  BEFORE INSERT ON staff
+  FOR EACH ROW EXECUTE FUNCTION assign_staff_serial();
 
 CREATE TRIGGER staff_updated_at
   BEFORE UPDATE ON staff

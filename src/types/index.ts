@@ -52,6 +52,7 @@ export type StaffStatus = 'Active' | 'Inactive';
 
 export interface Staff {
   id: string;
+  serialNumber?: string;
   name: string;
   role: StaffRole;
   mobileNumber: string;

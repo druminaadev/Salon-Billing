@@ -170,6 +170,7 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
         <table className="table">
           <thead>
             <tr>
+              <th>ID</th>
               <th>Name</th>
               {!isSplitPane && <th>Role</th>}
               <th>Contact</th>
@@ -181,6 +182,7 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
           <tbody>
             {filteredStaffs.map(s => (
               <tr key={s.id} style={{ opacity: s.status === 'Inactive' ? 0.6 : 1, background: isSplitPane && selectedStaff?.id === s.id ? 'var(--surface-hover)' : 'transparent' }}>
+                <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{s.serialNumber}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
