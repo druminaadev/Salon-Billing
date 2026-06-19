@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ViewState, TimeframeFilter } from '../types';
+import type { ViewState, TimeframeFilter, ThemeColor } from '../types';
 import { Menu, Moon, Sun, Bell, Search, CalendarDays } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -10,10 +10,12 @@ interface HeaderProps {
   onOpenMobileSidebar: () => void;
   globalTimeframe: TimeframeFilter;
   setGlobalTimeframe: (timeframe: TimeframeFilter) => void;
+  accentColor: ThemeColor;
+  setAccentColor: (color: ThemeColor) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  currentView, isDarkMode, toggleTheme, onOpenMobileSidebar, globalTimeframe, setGlobalTimeframe 
+  currentView, isDarkMode, toggleTheme, onOpenMobileSidebar, globalTimeframe, setGlobalTimeframe, accentColor, setAccentColor 
 }) => {
   const handleNotificationClick = () => {
     toast('No new notifications', {
@@ -109,6 +111,21 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         
         <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 0.5rem' }}></div>
+
+        {/* Theme Color Selector */}
+        <div style={{ position: 'relative' }}>
+           <select 
+             className="form-control" 
+             style={{ width: '110px', padding: '0.5rem', fontSize: '0.85rem', textTransform: 'capitalize' }}
+             value={accentColor}
+             onChange={e => setAccentColor(e.target.value as ThemeColor)}
+           >
+             <option value="purple">Purple</option>
+             <option value="emerald">Emerald</option>
+             <option value="blue">Blue</option>
+             <option value="orange">Orange</option>
+           </select>
+        </div>
 
         {/* Theme Toggle */}
         <button className="btn-icon" onClick={toggleTheme} title="Toggle Theme">

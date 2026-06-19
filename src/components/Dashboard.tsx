@@ -152,6 +152,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
                 <Area type="monotone" dataKey="revenue" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
             </ResponsiveContainer>
+            {revenueTrendData.length === 0 && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'color-mix(in srgb, var(--surface-color) 60%, transparent)', backdropFilter: 'blur(2px)' }}>
+                <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <TrendingUp size={32} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+                  <p>No revenue data for this timeframe.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -171,6 +179,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
                 <Bar dataKey="amount" fill="var(--secondary)" radius={[6, 6, 0, 0]} barSize={36} />
               </BarChart>
             </ResponsiveContainer>
+            {categoryExpenseData.length === 0 && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'color-mix(in srgb, var(--surface-color) 60%, transparent)', backdropFilter: 'blur(2px)' }}>
+                <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <TrendingDown size={32} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+                  <p>No expenses for this timeframe.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -211,7 +227,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
               ))}
               {recentBillings.length === 0 && (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '1.5rem' }}>No recent billings</td>
+                  <td colSpan={4}>
+                    <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '3rem 1rem' }}>
+                      <FileText size={32} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+                      <p>No recent billings found.</p>
+                      <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => onNavigate('billings')}>
+                        Create Invoice
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               )}
             </tbody>

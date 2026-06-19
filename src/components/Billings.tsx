@@ -3,18 +3,21 @@ import type { Billing, ViewState, PaymentMethod, TimeframeFilter, Staff } from '
 import { Download, FileText, FileSpreadsheet, Plus, Search, Filter, X, Eye, Edit, Trash2 } from 'lucide-react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
+import { BillingView } from './BillingView';
 
 interface BillingsProps {
   billings: Billing[];
   staffs: Staff[];
   onNavigate: (view: ViewState) => void;
   globalTimeframe: TimeframeFilter;
+  currentView?: ViewState;
+  selectedBilling?: Billing | null;
   onView: (billing: Billing) => void;
   onEdit: (billing: Billing) => void;
   onDelete: (id: string) => void;
 }
 
-export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate, globalTimeframe, onView, onEdit, onDelete }) => {
+export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate, globalTimeframe, currentView, selectedBilling, onView, onEdit, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<PaymentMethod | ''>('');
   const [staffFilter, setStaffFilter] = useState('');
@@ -110,9 +113,12 @@ export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate
     return `billings_${startDate || today}`;
   };
 
+  const isSplitPane = currentView === 'view-billing' && selectedBilling;
+
   return (
-    <div className="animate-fade-in">
-      <div className="topbar">
+    <div className={`animate-fade-in ${isSplitPane ? 'split-pane-container' : ''}`}>
+      <div className={isSplitPane ? 'split-pane-list' : ''}>
+        <div className="topbar">
         <div>
           <h1 style={{ marginBottom: '0.25rem' }}>Billings Management</h1>
           <p>Manage your salon's invoices and daily income.</p>
@@ -221,17 +227,17 @@ export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate
           <thead>
             <tr>
               <th>Serial No.</th>
-              <th>Date & Time</th>
+              <th>Date</th>
               <th>Customer</th>
-              <th>Services</th>
+              {!isSplitPane && <th>Services</th>}
               <th>Amount</th>
-              <th>Payment</th>
+              {!isSplitPane && <th>Payment</th>}
               <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredBillings.map(b => (
-              <tr key={b.id}>
+              <tr key={b.id} style={{ background: isSplitPane && selectedBilling?.id === b.id ? 'var(--surface-hover)' : 'transparent' }}>
                 <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{b.serialNumber}</td>
                 <td>
                   <div style={{ fontWeight: 500 }}>{format(new Date(b.createdAt), 'MMM dd, yyyy')}</div>
@@ -241,15 +247,17 @@ export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate
                   <div style={{ fontWeight: 500 }}>{b.customerName}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{b.mobileNumber}</div>
                 </td>
-                <td>
-                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                    {b.services.map(s => (
-                      <span key={s.id} className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{s.name} (x{s.quantity})</span>
-                    ))}
-                  </div>
-                </td>
+                {!isSplitPane && (
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                      {b.services.map(s => (
+                        <span key={s.id} className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{s.name} (x{s.quantity})</span>
+                      ))}
+                    </div>
+                  </td>
+                )}
                 <td style={{ fontWeight: 600 }}>{formatCurrency(b.grandTotal)}</td>
-                <td><span className="badge badge-neutral">{b.paymentMethod}</span></td>
+                {!isSplitPane && <td><span className="badge badge-neutral">{b.paymentMethod}</span></td>}
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                     <button 
@@ -286,14 +294,31 @@ export const Billings: React.FC<BillingsProps> = ({ billings, staffs, onNavigate
             ))}
             {filteredBillings.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
-                  No billings found.
+                <td colSpan={isSplitPane ? 5 : 7}>
+                  <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '4rem 1rem' }}>
+                    <ReceiptText size={48} style={{ opacity: 0.2, marginBottom: '1rem', color: 'var(--primary)' }} />
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-secondary)' }}>No invoices found</h3>
+                    <p style={{ marginTop: '0.5rem', maxWidth: '300px', margin: '0.5rem auto 0' }}>Try adjusting your filters or create a new invoice to get started.</p>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+      </div>
+
+      {isSplitPane && (
+        <div className="split-pane-detail animate-fade-in">
+          {selectedBilling ? (
+            <BillingView billing={selectedBilling} onBack={() => onNavigate('billings')} />
+          ) : (
+            <div className="split-pane-empty">
+              <p>Select an invoice to view details</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

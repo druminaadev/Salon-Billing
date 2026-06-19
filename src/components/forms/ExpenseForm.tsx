@@ -51,6 +51,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit, onCancel, in
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initialData?.paymentMethod || 'Cash');
   const [expenseDate, setExpenseDate] = useState(initialData?.date || format(new Date(), 'yyyy-MM-dd'));
   const [notes, setNotes] = useState(initialData?.notes || '');
+  const [vendorName, setVendorName] = useState(initialData?.vendorName || '');
+  const [priority, setPriority] = useState<ExpensePriority>(initialData?.priority || 'Medium');
+  const [recurrence, setRecurrence] = useState<ExpenseRecurrence>(initialData?.recurrence || 'One Time');
 
   // serial_number is GENERATED ALWAYS AS IDENTITY — DB assigns it on insert
 
@@ -63,10 +66,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit, onCancel, in
       id: initialData?.id || `e${Date.now()}`,
       serialNumber: initialData?.serialNumber || '',  // DB assigns real number on insert
       title, description: '', amount: Number(amount),
-      category, paymentMethod, vendorName: 'N/A',
+      category, paymentMethod, vendorName: vendorName || 'N/A',
       date: expenseDate, notes,
-      priority: 'Medium' as ExpensePriority,
-      recurrence: 'One Time' as ExpenseRecurrence,
+      priority,
+      recurrence,
     });
   };
 
@@ -130,6 +133,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ onSubmit, onCancel, in
             <Field label="Payment Method">
               <select className="form-control" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}>
                 {['Cash', 'UPI', 'Card', 'Bank Transfer', 'Online Payment'].map(m => <option key={m}>{m}</option>)}
+              </select>
+            </Field>
+            <Field label="Vendor Name">
+              <input type="text" className="form-control" value={vendorName} onChange={e => setVendorName(e.target.value)} placeholder="e.g. Amazon" />
+            </Field>
+            <Field label="Priority">
+              <select className="form-control" value={priority} onChange={e => setPriority(e.target.value as ExpensePriority)}>
+                {['Low', 'Medium', 'High'].map(p => <option key={p}>{p}</option>)}
+              </select>
+            </Field>
+            <Field label="Recurrence">
+              <select className="form-control" value={recurrence} onChange={e => setRecurrence(e.target.value as ExpenseRecurrence)}>
+                {['One Time', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'].map(r => <option key={r}>{r}</option>)}
               </select>
             </Field>
             <Field label="Notes" span>
