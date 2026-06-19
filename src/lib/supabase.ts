@@ -98,6 +98,7 @@ export interface ExpenseInsert {
 
 export interface StaffRow {
   id: string;
+  serial_number: number;
   name: string;
   role: StaffRoleDB;
   mobile_number: string;

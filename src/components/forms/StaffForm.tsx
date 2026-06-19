@@ -44,9 +44,14 @@ export const StaffForm: React.FC<StaffFormProps> = ({ onSubmit, onCancel, initia
     <div className="animate-fade-in" style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '1rem' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-          {initialData ? 'Edit Staff Member' : '✦ New Staff Member'}
-        </h2>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            {initialData ? 'Edit Staff Member' : '✦ New Staff Member'}
+          </h2>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500, fontFamily: 'monospace', marginTop: '0.2rem' }}>
+            {initialData ? initialData.serialNumber : 'Auto-assigned on save'}
+          </div>
+        </div>
         <button className="btn btn-outline" style={{ padding: '0.5rem' }} onClick={onCancel}><X size={16} /></button>
       </div>
 

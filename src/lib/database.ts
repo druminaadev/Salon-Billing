@@ -28,7 +28,7 @@ function mapServiceRowToApp(row: BillingServiceRow): ServiceItem {
 function mapBillingRowToApp(row: BillingWithServicesRow): Billing {
   return {
     id: row.id,
-    serialNumber: String(row.serial_number),  // DB number → string for display
+    serialNumber: `INV-${String(row.serial_number || 0).padStart(3, '0')}`,  // DB number → formatted string
     customerName: row.customer_name,
     mobileNumber: row.mobile_number,
     customerGender: row.customer_gender ?? undefined,
@@ -47,7 +47,7 @@ function mapBillingRowToApp(row: BillingWithServicesRow): Billing {
 function mapExpenseRowToApp(row: ExpenseRow): Expense {
   return {
     id: row.id,
-    serialNumber: String(row.serial_number),  // DB number → string for display
+    serialNumber: `EXP-${String(row.serial_number || 0).padStart(3, '0')}`,  // DB number → formatted string
     title: row.title,
     description: row.description,
     amount: Number(row.amount),
@@ -65,6 +65,7 @@ function mapExpenseRowToApp(row: ExpenseRow): Expense {
 function mapStaffRowToApp(row: StaffRow): Staff {
   return {
     id: row.id,
+    serialNumber: `EMP-${String(row.serial_number || 0).padStart(3, '0')}`,
     name: row.name,
     role: row.role,
     mobileNumber: row.mobile_number,

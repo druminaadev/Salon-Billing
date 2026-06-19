@@ -89,6 +89,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, billings, globalTim
             </h2>
             
             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <span className="badge badge-neutral" style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem', fontFamily: 'monospace' }}>{staff.serialNumber}</span>
               <span className="badge badge-neutral" style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}>{staff.role}</span>
               {staff.status === 'Active' ? (
                 <span className="badge badge-success" style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={14} /> Active</span>
