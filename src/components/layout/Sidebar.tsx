@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ViewState } from '../types';
+import type { ViewState } from '../../types';
 import { LayoutDashboard, ReceiptText, Plus, LogOut, ChevronLeft, ChevronRight, X, Wallet, Users } from 'lucide-react';
 
 interface SidebarProps {

@@ -1,8 +1,8 @@
 import React from 'react';
-import type { Billing, Expense, TimeframeFilter } from '../types';
+import type { Billing, Expense, TimeframeFilter } from '../../types';
 import { TrendingUp, TrendingDown, ArrowRight, Activity, Wallet, FileText } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { format, isToday, isThisWeek, isThisMonth } from 'date-fns';
+import { format, startOfWeek, startOfMonth } from 'date-fns';
 
 interface DashboardProps {
   billings: Billing[];
@@ -13,23 +13,42 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavigate, timeframe }) => {
 
-  const filteredBillings = billings.filter(b => {
-    if (timeframe === 'all') return true;
-    const date = new Date(b.createdAt);
-    if (timeframe === 'today') return isToday(date);
-    if (timeframe === 'week') return isThisWeek(date);
-    if (timeframe === 'month') return isThisMonth(date);
-    return true;
-  });
+  let startDate = '';
+  let endDate = '';
+  const today = new Date();
 
-  const filteredExpenses = expenses.filter(e => {
+  if (timeframe === 'today') {
+    startDate = format(today, 'yyyy-MM-dd');
+    endDate = format(today, 'yyyy-MM-dd');
+  } else if (timeframe === 'week') {
+    startDate = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    endDate = format(today, 'yyyy-MM-dd');
+  } else if (timeframe === 'month') {
+    startDate = format(startOfMonth(today), 'yyyy-MM-dd');
+    endDate = format(today, 'yyyy-MM-dd');
+  }
+
+  const getDateOnly = (value: string) => value.slice(0, 10);
+
+  const isDateInRange = (dateString: string) => {
     if (timeframe === 'all') return true;
-    const date = new Date(e.date);
-    if (timeframe === 'today') return isToday(date);
-    if (timeframe === 'week') return isThisWeek(date);
-    if (timeframe === 'month') return isThisMonth(date);
-    return true;
-  });
+    if (!startDate && !endDate) return true;
+
+    const d = getDateOnly(dateString);
+
+    let isValid = true;
+    if (startDate && d < startDate) {
+      isValid = false;
+    }
+    if (endDate && d > endDate) {
+      isValid = false;
+    }
+    return isValid;
+  };
+
+  const filteredBillings = billings.filter(b => isDateInRange(b.createdAt));
+
+  const filteredExpenses = expenses.filter(e => isDateInRange(e.date));
 
   const totalRevenue = filteredBillings.reduce((sum, b) => sum + b.grandTotal, 0);
   const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -55,7 +74,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
       acc.push({ name: dateStr, revenue: curr.grandTotal });
     }
     return acc;
-  }, []).sort((a,b) => new Date(a.name).getTime() - new Date(b.name).getTime());
+  }, []).sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
   const categoryExpenseData = filteredExpenses.reduce((acc: any[], curr) => {
     const existing = acc.find(item => item.name === curr.category);
@@ -75,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
           <p style={{ color: 'var(--text-secondary)' }}>Welcome back! Here's your business at a glance.</p>
         </div>
       </div>
-      
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="glass-panel" style={{ padding: '1rem', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
@@ -138,15 +157,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
               <AreaChart data={revenueTrendData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} tickFormatter={(value) => `₹${value}`} dx={-10} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-md)', color: 'var(--text-primary)' }} 
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-md)', color: 'var(--text-primary)' }}
                   itemStyle={{ color: 'var(--primary)', fontWeight: 600 }}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
@@ -171,9 +190,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} tickFormatter={(value) => `₹${value}`} dx={-10} />
-                <Tooltip 
-                  cursor={{ fill: 'var(--surface-hover)' }} 
-                  contentStyle={{ backgroundColor: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-md)', color: 'var(--text-primary)' }} 
+                <Tooltip
+                  cursor={{ fill: 'var(--surface-hover)' }}
+                  contentStyle={{ backgroundColor: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-md)', color: 'var(--text-primary)' }}
                   itemStyle={{ color: 'var(--secondary)', fontWeight: 600 }}
                 />
                 <Bar dataKey="amount" fill="var(--secondary)" radius={[6, 6, 0, 0]} barSize={36} />
@@ -198,7 +217,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ billings, expenses, onNavi
             View All <ArrowRight size={14} />
           </button>
         </div>
-        
+
         <div className="table-container">
           <table className="table">
             <thead>

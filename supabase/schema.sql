@@ -75,6 +75,8 @@ CREATE INDEX IF NOT EXISTS idx_billings_serial ON billings (serial_number);
 
 -- ─────────────────────────────────────────
 -- 3. BILLING SERVICES TABLE (line items)
+-- service_by: Simple staff name string (auto-populated from staff_assignments for compatibility)
+-- staff_assignments: JSONB array for split amounts [{staffName: string, amount: number}]
 -- ─────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS billing_services (
@@ -83,11 +85,13 @@ CREATE TABLE IF NOT EXISTS billing_services (
   name        TEXT          NOT NULL CHECK (char_length(name) <= 100),
   price       NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (price >= 0),
   quantity    INTEGER       NOT NULL DEFAULT 1 CHECK (quantity >= 1 AND quantity <= 1000),
-  service_by  TEXT          CHECK (char_length(service_by) <= 100),
+  service_by  TEXT          CHECK (char_length(service_by) <= 200),
+  staff_assignments JSONB,
   created_at  TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_billing_services_billing_id ON billing_services (billing_id);
+CREATE INDEX IF NOT EXISTS idx_billing_services_staff_assignments ON billing_services USING GIN (staff_assignments);
 
 
 -- ─────────────────────────────────────────

@@ -1,9 +1,15 @@
+export interface StaffAssignment {
+  staffName: string;
+  amount: number; // Staff's share of service price in rupees
+}
+
 export interface ServiceItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
-  serviceBy?: string;
+  serviceBy?: string;           // legacy: comma-joined names (kept for DB compat)
+  staffAssignments?: StaffAssignment[]; // new: per-staff split
 }
 
 export type PaymentMethod = 'Cash' | 'UPI' | 'Card' | 'Bank Transfer' | 'Online Payment';
@@ -15,7 +21,6 @@ export interface Billing {
   serialNumber: string;
   customerName: string;
   mobileNumber: string;
-  customerGender?: 'Male' | 'Female';
   services: ServiceItem[];
   subtotal: number;
   discount: number;

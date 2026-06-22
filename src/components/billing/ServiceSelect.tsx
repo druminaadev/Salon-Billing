@@ -2,15 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, ChevronDown } from 'lucide-react';
 import { predefinedServices } from '../../data/services';
-import type { PredefinedService, Gender } from '../../data/services';
+import type { PredefinedService } from '../../data/services';
 
 interface ServiceSelectProps {
-  gender: Gender;
   value: string;
   onChange: (serviceName: string, price: number) => void;
 }
 
-export const ServiceSelect: React.FC<ServiceSelectProps> = ({ gender, value, onChange }) => {
+export const ServiceSelect: React.FC<ServiceSelectProps> = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
@@ -46,12 +45,7 @@ export const ServiceSelect: React.FC<ServiceSelectProps> = ({ gender, value, onC
     setIsOpen(true);
   };
 
-  const [selectedGender, setSelectedGender] = useState<Gender>(gender);
-
-  useEffect(() => { setSelectedGender(gender); }, [gender]);
-
   const filteredServices = predefinedServices.filter(s =>
-    s.gender === selectedGender &&
     (!searchTerm || s.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -89,17 +83,6 @@ export const ServiceSelect: React.FC<ServiceSelectProps> = ({ gender, value, onC
           autoFocus
           style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.83rem', color: 'var(--text-primary)', fontFamily: 'var(--font-family)' }}
         />
-        <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
-          {(['Male', 'Female'] as Gender[]).map(g => (
-            <button key={g} onMouseDown={e => { e.preventDefault(); setSelectedGender(g); }} style={{
-              padding: '0.2rem 0.55rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'var(--font-family)', transition: 'all 0.15s',
-              border: `1.5px solid ${selectedGender === g ? (g === 'Male' ? 'var(--primary)' : 'var(--secondary)') : 'var(--border-color)'}`,
-              background: selectedGender === g ? (g === 'Male' ? 'var(--primary)' : 'var(--secondary)') : 'transparent',
-              color: selectedGender === g ? 'white' : 'var(--text-tertiary)',
-            }}>{g}</button>
-          ))}
-        </div>
       </div>
       <div style={{ overflowY: 'auto', flex: 1, padding: '0.4rem 0' }}>
         {Object.keys(groupedServices).length === 0 ? (

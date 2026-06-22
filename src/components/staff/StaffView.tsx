@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Staff, Billing, TimeframeFilter } from '../types';
+import type { Staff, Billing, TimeframeFilter } from '../../types';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
 import { ArrowLeft, Briefcase, Scissors, TrendingUp, Calendar, Phone, ShieldCheck, UserX } from 'lucide-react';
 
@@ -42,17 +42,29 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, billings, globalTim
 
   filteredBillings.forEach(billing => {
     billing.services.forEach(service => {
-      // Check if this service was performed by the current staff
-      if (service.serviceBy === staff.name) {
-        const itemRevenue = (service.price || 0) * (service.quantity || 1);
-        totalRevenue += itemRevenue;
-        servicesCompleted += (service.quantity || 1);
+      let staffRevenue = 0;
+      let staffQty = 0;
+      
+      if (service.staffAssignments) {
+        const assignment = service.staffAssignments.find(a => a.staffName === staff.name);
+        if (assignment) {
+          staffRevenue = assignment.amount;
+          staffQty = service.quantity || 1;
+        }
+      } else if (service.serviceBy === staff.name) {
+        staffRevenue = (service.price || 0) * (service.quantity || 1);
+        staffQty = service.quantity || 1;
+      }
+      
+      if (staffRevenue > 0) {
+        totalRevenue += staffRevenue;
+        servicesCompleted += staffQty;
 
         if (!serviceBreakdown[service.name]) {
           serviceBreakdown[service.name] = { count: 0, revenue: 0 };
         }
-        serviceBreakdown[service.name].count += (service.quantity || 1);
-        serviceBreakdown[service.name].revenue += itemRevenue;
+        serviceBreakdown[service.name].count += staffQty;
+        serviceBreakdown[service.name].revenue += staffRevenue;
       }
     });
   });
