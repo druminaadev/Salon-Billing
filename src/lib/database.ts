@@ -22,6 +22,7 @@ function mapServiceRowToApp(row: BillingServiceRow): ServiceItem {
     price: Number(row.price),
     quantity: row.quantity,
     serviceBy: row.service_by ?? undefined,
+    staffAssignments: row.staff_assignments ?? undefined,
   };
 }
 
@@ -31,7 +32,6 @@ function mapBillingRowToApp(row: BillingWithServicesRow): Billing {
     serialNumber: `INV-${String(row.serial_number || 0).padStart(3, '0')}`,  // DB number → formatted string
     customerName: row.customer_name,
     mobileNumber: row.mobile_number,
-    customerGender: row.customer_gender ?? undefined,
     services: (row.billing_services ?? []).map(mapServiceRowToApp),
     subtotal: Number(row.subtotal),
     discount: Number(row.discount),
@@ -81,7 +81,6 @@ function mapBillingToInsertRow(billing: Billing): BillingInsert {
     // serial_number is handled by a database trigger (assign_billing_serial)
     customer_name: billing.customerName,
     mobile_number: billing.mobileNumber,
-    customer_gender: billing.customerGender ?? null,
     subtotal: billing.subtotal,
     discount: billing.discount,
     tax: billing.tax,
@@ -160,13 +159,27 @@ export async function createBilling(billing: Billing): Promise<Billing> {
 
   // 2. Insert service line items
   if (billing.services.length > 0) {
-    const serviceRows = billing.services.map((s) => ({
-      billing_id: billingId,
-      name: s.name,
-      price: s.price,
-      quantity: s.quantity,
-      service_by: s.serviceBy ?? null,
-    }));
+    const serviceRows = billing.services.map((s) => {
+      let serviceBy = null;
+      let staffAssignments = null;
+      
+      if (s.staffAssignments && s.staffAssignments.length > 0) {
+        staffAssignments = s.staffAssignments;
+        // Keep serviceBy for backward compatibility and simple queries
+        serviceBy = s.staffAssignments.map(a => a.staffName).join(', ');
+      } else if (s.serviceBy) {
+        serviceBy = s.serviceBy;
+      }
+      
+      return {
+        billing_id: billingId,
+        name: s.name,
+        price: s.price,
+        quantity: s.quantity,
+        service_by: serviceBy,
+        staff_assignments: staffAssignments,
+      };
+    });
 
     const { error: servicesError } = await supabase
       .from('billing_services')
@@ -226,13 +239,27 @@ export async function updateBilling(billing: Billing): Promise<Billing> {
   }
 
   if (billing.services.length > 0) {
-    const serviceRows = billing.services.map((s) => ({
-      billing_id: billing.id,
-      name: s.name,
-      price: s.price,
-      quantity: s.quantity,
-      service_by: s.serviceBy ?? null,
-    }));
+    const serviceRows = billing.services.map((s) => {
+      let serviceBy = null;
+      let staffAssignments = null;
+      
+      if (s.staffAssignments && s.staffAssignments.length > 0) {
+        staffAssignments = s.staffAssignments;
+        // Keep serviceBy for backward compatibility and simple queries
+        serviceBy = s.staffAssignments.map(a => a.staffName).join(', ');
+      } else if (s.serviceBy) {
+        serviceBy = s.serviceBy;
+      }
+      
+      return {
+        billing_id: billing.id,
+        name: s.name,
+        price: s.price,
+        quantity: s.quantity,
+        service_by: serviceBy,
+        staff_assignments: staffAssignments,
+      };
+    });
 
     const { error: insertError } = await supabase
       .from('billing_services')

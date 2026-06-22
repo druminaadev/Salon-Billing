@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ViewState, TimeframeFilter, ThemeColor } from '../types';
+import type { ViewState, TimeframeFilter, ThemeColor } from '../../types';
 import { Menu, Moon, Sun, Bell, Search, CalendarDays } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 

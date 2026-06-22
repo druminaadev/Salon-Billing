@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { ViewState, TimeframeFilter, ThemeColor } from '../types';
+import type { ViewState, TimeframeFilter, ThemeColor } from '../../types';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { LayoutDashboard, ReceiptText, CreditCard, Plus } from 'lucide-react';

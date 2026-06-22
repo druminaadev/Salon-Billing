@@ -8,7 +8,6 @@ import { createClient } from '@supabase/supabase-js';
 export type PaymentMethodDB = 'Cash' | 'UPI' | 'Card' | 'Bank Transfer' | 'Online Payment';
 export type ExpensePriorityDB = 'Low' | 'Medium' | 'High';
 export type ExpenseRecurrenceDB = 'One Time' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
-export type CustomerGenderDB = 'Male' | 'Female';
 export type StaffRoleDB = 'Stylist' | 'Barber' | 'Therapist' | 'Manager' | 'Other';
 export type StaffStatusDB = 'Active' | 'Inactive';
 
@@ -17,7 +16,6 @@ export interface BillingRow {
   serial_number: number;       // DB auto-increment: 1, 2, 3…
   customer_name: string;
   mobile_number: string;
-  customer_gender: CustomerGenderDB | null;
   subtotal: number;
   discount: number;
   tax: number;
@@ -35,6 +33,7 @@ export interface BillingServiceRow {
   price: number;
   quantity: number;
   service_by: string | null;
+  staff_assignments: { staffName: string; amount: number }[] | null;
   created_at: string;
 }
 
@@ -65,7 +64,6 @@ export interface BillingWithServicesRow extends BillingRow {
 export interface BillingInsert {
   customer_name: string;
   mobile_number: string;
-  customer_gender: CustomerGenderDB | null;
   subtotal: number;
   discount: number;
   tax: number;
@@ -80,6 +78,7 @@ export interface BillingServiceInsert {
   price: number;
   quantity: number;
   service_by: string | null;
+  staff_assignments?: { staffName: string; amount: number }[] | null;
 }
 
 export interface ExpenseInsert {

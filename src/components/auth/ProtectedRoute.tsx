@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { isSessionValid, refreshSession, updateActivity, checkInactivity, logSecurityEvent } from '../utils/security';
+import { isSessionValid, refreshSession, updateActivity, checkInactivity, logSecurityEvent } from '../../utils/security';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

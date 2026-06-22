@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Layout } from './components/Layout';
-const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-import { Billings } from './components/Billings';
-import { Expenses } from './components/Expenses';
-import { BillingForm } from './components/forms/BillingForm';
-import { ExpenseForm } from './components/forms/ExpenseForm';
-import { Staffs } from './components/Staffs';
-import { StaffForm } from './components/forms/StaffForm';
-import { SlideOver } from './components/SlideOver';
-import { Login } from './components/Login';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { Layout } from './components/layout/Layout';
+const Dashboard = lazy(() => import('./components/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
+import { Billings } from './components/billing/Billings';
+import { Expenses } from './components/expense/Expenses';
+import { BillingForm } from './components/billing/BillingForm';
+import { ExpenseForm } from './components/expense/ExpenseForm';
+import { Staffs } from './components/staff/Staffs';
+import { StaffForm } from './components/staff/StaffForm';
+import { SlideOver } from './components/layout/SlideOver';
+import { Login } from './components/auth/Login';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import type { ViewState, Billing, Expense, TimeframeFilter, Staff, ThemeColor } from './types';
 import {
   createSession,
@@ -45,7 +45,7 @@ import { Toaster, toast } from 'react-hot-toast';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
-  const [globalTimeframe, setGlobalTimeframe] = useState<TimeframeFilter>('today');
+  const [globalTimeframe, setGlobalTimeframe] = useState<TimeframeFilter>('all');
 
   // Data state — starts empty, loaded from Supabase
   const [billings, setBillings] = useState<Billing[]>([]);
@@ -380,9 +380,9 @@ function App() {
               }}
               onDelete={handleDeleteBilling}
             />
-            <SlideOver 
-              isOpen={currentView === 'new-billing' || currentView === 'edit-billing'} 
-              onClose={() => setCurrentView('billings')} 
+            <SlideOver
+              isOpen={currentView === 'new-billing' || currentView === 'edit-billing'}
+              onClose={() => setCurrentView('billings')}
               title={currentView === 'new-billing' ? 'Create New Invoice' : 'Edit Invoice'}
             >
               {currentView === 'new-billing' && (
@@ -417,9 +417,9 @@ function App() {
               }}
               onDelete={handleDeleteExpense}
             />
-            <SlideOver 
-              isOpen={currentView === 'new-expense' || currentView === 'edit-expense'} 
-              onClose={() => setCurrentView('expenses')} 
+            <SlideOver
+              isOpen={currentView === 'new-expense' || currentView === 'edit-expense'}
+              onClose={() => setCurrentView('expenses')}
               title={currentView === 'new-expense' ? 'Record Expense' : 'Edit Expense'}
             >
               {currentView === 'new-expense' && (
@@ -455,9 +455,9 @@ function App() {
               }}
               onDelete={handleDeleteStaff}
             />
-            <SlideOver 
-              isOpen={currentView === 'new-staff' || currentView === 'edit-staff'} 
-              onClose={() => setCurrentView('staff')} 
+            <SlideOver
+              isOpen={currentView === 'new-staff' || currentView === 'edit-staff'}
+              onClose={() => setCurrentView('staff')}
               title={currentView === 'new-staff' ? 'Add Staff Member' : 'Edit Staff Member'}
             >
               {currentView === 'new-staff' && (

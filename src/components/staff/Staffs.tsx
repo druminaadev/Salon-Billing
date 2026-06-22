@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Staff, ViewState, Billing, TimeframeFilter } from '../types';
-import { Plus, Search, Eye, Edit, Trash2, ShieldCheck, UserX, Users, TrendingUp, Scissors } from 'lucide-react';
+import type { Staff, ViewState, Billing, TimeframeFilter } from '../../types';
+import { Plus, Search, Eye, Edit, Trash2, ShieldCheck, UserX, Users, TrendingUp, Scissors, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfWeek, startOfMonth } from 'date-fns';
 import { StaffView } from './StaffView';
 
@@ -21,6 +21,8 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
   const [nameFilter, setNameFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   const filteredStaffs = staffs.filter(s => {
     const matchesSearch = 
@@ -63,8 +65,17 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
 
   filteredBillings.forEach(b => {
     b.services.forEach(s => {
-      // Add to total revenue if the service was performed by someone in our currently filtered list
-      if (s.serviceBy && filteredStaffs.some(staff => staff.name === s.serviceBy)) {
+      if (s.staffAssignments && s.staffAssignments.length > 0) {
+        s.staffAssignments.forEach(assign => {
+          if (filteredStaffs.some(staff => staff.name === assign.staffName)) {
+            totalRevenue += assign.amount;
+          }
+        });
+        // Count service only once even if multiple staff worked on it
+        if (s.staffAssignments.some(assign => filteredStaffs.some(staff => staff.name === assign.staffName))) {
+          totalServices += (s.quantity || 1);
+        }
+      } else if (s.serviceBy && filteredStaffs.some(staff => staff.name === s.serviceBy)) {
         totalRevenue += (s.price || 0) * (s.quantity || 1);
         totalServices += (s.quantity || 1);
       }
@@ -72,6 +83,8 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
   });
 
   const isSplitPane = currentView === 'view-staff' && selectedStaff;
+  const totalPages = Math.ceil(filteredStaffs.length / itemsPerPage);
+  const paginatedStaffs = filteredStaffs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className={`animate-fade-in ${isSplitPane ? 'split-pane-container' : ''}`}>
@@ -127,15 +140,15 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
         </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: '1 1 200px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <input 
-              type="text" 
-              className="form-control" 
-              placeholder="Search..." 
-              style={{ paddingLeft: '2.5rem' }}
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', borderRadius: 'var(--radius-xl)' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: '350px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }} />
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search staff..."
+              style={{ paddingLeft: '2.75rem', borderRadius: 'var(--radius-full)', border: '1px solid color-mix(in srgb, var(--primary) 30%, var(--border-color))', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -166,24 +179,34 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
         </div>
       </div>
 
-      <div className="table-container">
-        <table className="table">
-          <thead>
+      <div className="table-container" style={{ borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-md)', overflow: 'hidden', border: 'none' }}>
+        <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0' }}>
+          <thead style={{ background: 'color-mix(in srgb, var(--primary) 5%, var(--surface-color))' }}>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              {!isSplitPane && <th>Role</th>}
-              <th>Contact</th>
-              <th>Status</th>
-              {!isSplitPane && <th>Joined Date</th>}
-              <th style={{ textAlign: 'right' }}>Actions</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>ID</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Name</th>
+              {!isSplitPane && <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Role</th>}
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Contact</th>
+              <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Status</th>
+              {!isSplitPane && <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Joined Date</th>}
+              <th style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-secondary)' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredStaffs.map(s => (
-              <tr key={s.id} style={{ opacity: s.status === 'Inactive' ? 0.6 : 1, background: isSplitPane && selectedStaff?.id === s.id ? 'var(--surface-hover)' : 'transparent' }}>
-                <td style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{s.serialNumber}</td>
-                <td>
+            {paginatedStaffs.map(s => (
+              <tr key={s.id}
+                style={{
+                  opacity: s.status === 'Inactive' ? 0.6 : 1,
+                  background: isSplitPane && selectedStaff?.id === s.id ? 'var(--surface-hover)' : 'var(--surface-color)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                }}
+                onClick={(evt) => { if ((evt.target as HTMLElement).closest('button')) return; onView(s); }}
+              >
+                <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '0.875rem' }}>{s.serialNumber}</div>
+                </td>
+                <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                       {s.name.charAt(0).toUpperCase()}
@@ -191,33 +214,21 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
                     <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{s.name}</span>
                   </div>
                 </td>
-                {!isSplitPane && <td><span className="badge badge-neutral">{s.role}</span></td>}
-                <td style={{ color: 'var(--text-secondary)' }}>{s.mobileNumber}</td>
-                <td>
+                {!isSplitPane && <td style={{ padding: '1rem', verticalAlign: 'middle' }}><span className="badge badge-neutral" style={{ padding: '0.3rem 0.8rem' }}>{s.role}</span></td>}
+                <td style={{ padding: '1rem', verticalAlign: 'middle', color: 'var(--text-secondary)' }}>{s.mobileNumber}</td>
+                <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
                   {s.status === 'Active' ? (
-                    <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <ShieldCheck size={12} /> Active
-                    </span>
+                    <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.3rem 0.8rem' }}><ShieldCheck size={12} /> Active</span>
                   ) : (
-                    <span className="badge badge-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <UserX size={12} /> Inactive
-                    </span>
+                    <span className="badge badge-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.3rem 0.8rem' }}><UserX size={12} /> Inactive</span>
                   )}
                 </td>
-                {!isSplitPane && <td style={{ color: 'var(--text-secondary)' }}>{format(new Date(s.joinDate), 'MMM dd, yyyy')}</td>}
-                <td style={{ textAlign: 'right' }}>
+                {!isSplitPane && <td style={{ padding: '1rem', verticalAlign: 'middle', color: 'var(--text-secondary)' }}>{format(new Date(s.joinDate), 'MMM dd, yyyy')}</td>}
+                <td style={{ padding: '1rem', textAlign: 'right', verticalAlign: 'middle' }}>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                    <button className="btn-icon" style={{ color: 'var(--primary)' }} onClick={() => onView(s)} title="View Details">
-                      <Eye size={18} />
-                    </button>
-                    <button className="btn-icon" style={{ color: 'var(--text-secondary)' }} onClick={() => onEdit(s)} title="Edit">
-                      <Edit size={18} />
-                    </button>
-                    <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this staff member?')) onDelete(s.id);
-                    }} title="Delete">
-                      <Trash2 size={18} />
-                    </button>
+                    <button className="btn-icon" style={{ color: 'var(--primary)' }} onClick={() => onView(s)} title="View Details"><Eye size={18} /></button>
+                    <button className="btn-icon" style={{ color: 'var(--text-secondary)' }} onClick={() => onEdit(s)} title="Edit"><Edit size={18} /></button>
+                    <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => { if (window.confirm('Are you sure you want to delete this staff member?')) onDelete(s.id); }} title="Delete"><Trash2 size={18} /></button>
                   </div>
                 </td>
               </tr>
@@ -235,6 +246,36 @@ export const Staffs: React.FC<StaffsProps> = ({ staffs, billings, globalTimefram
             )}
           </tbody>
         </table>
+
+        {filteredStaffs.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: 'var(--surface-color)', borderTop: '1px solid color-mix(in srgb, var(--border-color) 40%, transparent)' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, filteredStaffs.length)} of {filteredStaffs.length}
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button style={{ background: 'none', border: 'none', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', outline: 'none' }} disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+                <ChevronLeft size={16} strokeWidth={2.5} />
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                {Array.from({ length: Math.max(1, totalPages) }).map((_, i) => {
+                  const pageNum = i + 1;
+                  if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+                    const isActive = currentPage === pageNum;
+                    return (
+                      <button key={pageNum} style={{ background: isActive ? 'var(--primary)' : 'transparent', color: isActive ? 'white' : 'var(--text-secondary)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: isActive ? 600 : 500, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s ease', outline: 'none' }} onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                    );
+                  } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return <span key={pageNum} style={{ color: 'var(--text-secondary)', padding: '0 4px' }}>...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+              <button style={{ background: 'none', border: 'none', cursor: currentPage === totalPages || totalPages === 0 ? 'default' : 'pointer', color: currentPage === totalPages || totalPages === 0 ? 'var(--text-tertiary)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', outline: 'none' }} disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
+                <ChevronRight size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       </div>
 
